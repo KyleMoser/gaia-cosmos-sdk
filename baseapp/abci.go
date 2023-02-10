@@ -299,6 +299,7 @@ func (app *BaseApp) Commit() (res abci.ResponseCommit) {
 	defer telemetry.MeasureSince(time.Now(), "abci", "commit")
 	app.logger.Info("commit -- testing")
 	fmt.Printf("WOOOO, Commit got called!!")
+	fmt.Printf("Second message")
 
 	header := app.deliverState.ctx.BlockHeader()
 	retainHeight := app.GetBlockRetentionHeight(header.Height)
