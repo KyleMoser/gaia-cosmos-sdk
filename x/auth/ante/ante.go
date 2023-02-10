@@ -40,18 +40,31 @@ func NewAnteHandler(options HandlerOptions) (sdk.AnteHandler, error) {
 
 	anteDecorators := []sdk.AnteDecorator{
 		NewSetUpContextDecorator(), // outermost AnteDecorator. SetUpContext must be called first
+		NewPrintDebugInfoDecorator("ante.1"),
 		NewRejectExtensionOptionsDecorator(),
+		NewPrintDebugInfoDecorator("ante.2"),
 		NewMempoolFeeDecorator(),
+		NewPrintDebugInfoDecorator("ante.3"),
 		NewValidateBasicDecorator(),
+		NewPrintDebugInfoDecorator("ante.4"),
 		NewTxTimeoutHeightDecorator(),
+		NewPrintDebugInfoDecorator("ante.5"),
 		NewValidateMemoDecorator(options.AccountKeeper),
+		NewPrintDebugInfoDecorator("ante.6"),
 		NewConsumeGasForTxSizeDecorator(options.AccountKeeper),
+		NewPrintDebugInfoDecorator("ante.7"),
 		NewDeductFeeDecorator(options.AccountKeeper, options.BankKeeper, options.FeegrantKeeper),
+		NewPrintDebugInfoDecorator("ante.8"),
 		NewSetPubKeyDecorator(options.AccountKeeper), // SetPubKeyDecorator must be called before all signature verification decorators
+		NewPrintDebugInfoDecorator("ante.9"),
 		NewValidateSigCountDecorator(options.AccountKeeper),
+		NewPrintDebugInfoDecorator("ante.10"),
 		NewSigGasConsumeDecorator(options.AccountKeeper, sigGasConsumer),
+		NewPrintDebugInfoDecorator("ante.11"),
 		NewSigVerificationDecorator(options.AccountKeeper, options.SignModeHandler),
+		NewPrintDebugInfoDecorator("ante.12"),
 		NewIncrementSequenceDecorator(options.AccountKeeper),
+		NewPrintDebugInfoDecorator("ante.13"),
 	}
 
 	return sdk.ChainAnteDecorators(anteDecorators...), nil

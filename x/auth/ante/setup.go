@@ -5,6 +5,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/cosmos/cosmos-sdk/util"
 	"github.com/cosmos/cosmos-sdk/x/auth/legacy/legacytx"
 )
 
@@ -23,10 +24,26 @@ type GasTx interface {
 // on gas provided and gas used.
 // CONTRACT: Must be first decorator in the chain
 // CONTRACT: Tx must implement GasTx interface
-type SetUpContextDecorator struct{}
+type SetUpContextDecorator struct {
+}
 
 func NewSetUpContextDecorator() SetUpContextDecorator {
 	return SetUpContextDecorator{}
+}
+
+type PrintDebugInfoDecorator struct {
+	id string
+}
+
+func NewPrintDebugInfoDecorator(callerId string) PrintDebugInfoDecorator {
+	return PrintDebugInfoDecorator{
+		id: callerId,
+	}
+}
+
+func (pdi PrintDebugInfoDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (newCtx sdk.Context, err error) {
+	util.PrintTxInfo(tx, pdi.id)
+	return next(newCtx, tx, simulate)
 }
 
 func (sud SetUpContextDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (newCtx sdk.Context, err error) {
