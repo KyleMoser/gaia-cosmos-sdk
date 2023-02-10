@@ -297,9 +297,7 @@ func (app *BaseApp) DeliverTx(req abci.RequestDeliverTx) abci.ResponseDeliverTx 
 // height.
 func (app *BaseApp) Commit() (res abci.ResponseCommit) {
 	defer telemetry.MeasureSince(time.Now(), "abci", "commit")
-	app.logger.Info("commit -- testing")
-	fmt.Printf("WOOOO, Commit got called!!")
-	fmt.Printf("Second message")
+	app.logger.Info("Test message for relayer docker image build.. does this show up?")
 
 	header := app.deliverState.ctx.BlockHeader()
 	retainHeight := app.GetBlockRetentionHeight(header.Height)
