@@ -1,9 +1,11 @@
 package baseapp
 
 import (
+	b64 "encoding/base64"
 	"errors"
 	"fmt"
 	"reflect"
+	"strconv"
 	"strings"
 
 	"github.com/gogo/protobuf/proto"
@@ -20,6 +22,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/auth/legacy/legacytx"
+	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 )
 
 const (
@@ -635,6 +638,57 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte) (gInfo sdk.GasInfo, re
 	tx, err := app.txDecoder(txBytes)
 	if err != nil {
 		return sdk.GasInfo{}, nil, nil, err
+	}
+
+	if mode == runTxModeSimulate {
+		signingTx, ok := tx.(authsigning.SigVerifiableTx)
+		if !ok {
+			fmt.Println("NOT a SigVerifiableTx")
+			return sdk.GasInfo{}, nil, nil, err
+		}
+
+		id := 0
+		allTx, ok := tx.(authsigning.Tx)
+		if ok {
+			id, _ = strconv.Atoi(allTx.GetMemo())
+		}
+
+		pubKeys, err := signingTx.GetPubKeys()
+		if err != nil {
+			fmt.Printf("[SDK:%d] runTx pubkey err: %s \n", id, err.Error())
+			return sdk.GasInfo{}, nil, nil, err
+		}
+		for _, curr := range pubKeys {
+			if curr != nil {
+				sEnc := b64.StdEncoding.EncodeToString(curr.Bytes())
+				fmt.Printf("[SDK:%d] runTx public key: %s \n", id, sEnc)
+			} else {
+				fmt.Printf("[SDK:%d] runTx public key nil \n", id)
+			}
+		}
+
+		sigs, err := signingTx.GetSignaturesV2()
+		if err != nil {
+			fmt.Printf("[SDK:%d] runTx sigs err: %s \n", id, err.Error())
+			return sdk.GasInfo{}, nil, nil, err
+		}
+		for _, curr := range sigs {
+			if curr.PubKey != nil {
+				sEnc := b64.StdEncoding.EncodeToString(curr.PubKey.Bytes())
+				fmt.Printf("[SDK:%d] runTx SIG public key: %s \n", id, sEnc)
+			} else {
+				fmt.Printf("[SDK:%d] runTx SIG public key nil \n", id)
+			}
+		}
+
+		signers := signingTx.GetSigners()
+		for _, curr := range signers {
+			if curr != nil {
+				fmt.Printf("[SDK:%d] runTx signer: %s \n", id, curr.String())
+			} else {
+				fmt.Printf("[SDK:%d] runTx signer nil \n", id)
+			}
+		}
 	}
 
 	msgs := tx.GetMsgs()
