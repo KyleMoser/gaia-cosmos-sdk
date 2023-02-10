@@ -60,6 +60,8 @@ func (spkd SetPubKeyDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate b
 		return ctx, sdkerrors.Wrap(sdkerrors.ErrTxDecode, "invalid tx type")
 	}
 
+	fmt.Printf("Called SetPubKeyDecorator AnteHandle in sigverify.go")
+
 	pubkeys, err := sigTx.GetPubKeys()
 	if err != nil {
 		return ctx, err
@@ -69,6 +71,8 @@ func (spkd SetPubKeyDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate b
 	for i, pk := range pubkeys {
 		// PublicKey was omitted from slice since it has already been set in context
 		if pk == nil {
+			fmt.Printf("SetPubKeyDecorator AnteHandler: public key is nil, setting to default value")
+
 			if !simulate {
 				continue
 			}
@@ -86,8 +90,11 @@ func (spkd SetPubKeyDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate b
 		}
 		// account already has pubkey set,no need to reset
 		if acc.GetPubKey() != nil {
+			fmt.Printf("SetPubKeyDecorator AnteHandler: acc.GetPubKey() != nil")
 			continue
 		}
+
+		fmt.Printf("SetPubKeyDecorator AnteHandler:  acc.SetPubKey(pk)")
 		err = acc.SetPubKey(pk)
 		if err != nil {
 			return ctx, sdkerrors.Wrap(sdkerrors.ErrInvalidPubKey, err.Error())
@@ -147,7 +154,7 @@ func (sgcd SigGasConsumeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simula
 	if !ok {
 		return ctx, sdkerrors.Wrap(sdkerrors.ErrTxDecode, "invalid transaction type")
 	}
-
+	fmt.Printf("Called SigGasConsumeDecorator AnteHandle in sigverify.go")
 	params := sgcd.ak.GetParams(ctx)
 	sigs, err := sigTx.GetSignaturesV2()
 	if err != nil {
@@ -171,6 +178,7 @@ func (sgcd SigGasConsumeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simula
 		// shall consume the largest amount, i.e. it takes more gas to verify
 		// secp256k1 keys than ed25519 ones.
 		if simulate && pubKey == nil {
+			fmt.Printf("SetPubKeyDecorator AnteHandler: simulate && pubKey == nil")
 			pubKey = simSecp256k1Pubkey
 		}
 
@@ -234,6 +242,8 @@ func (svd SigVerificationDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simul
 		return ctx, sdkerrors.Wrap(sdkerrors.ErrTxDecode, "invalid transaction type")
 	}
 
+	fmt.Printf("Called SigVerificationDecorator AnteHandle in sigverify.go")
+
 	// stdSigs contains the sequence number, account number, and signatures.
 	// When simulating, this would just be a 0-length slice.
 	sigs, err := sigTx.GetSignaturesV2()
@@ -259,6 +269,10 @@ func (svd SigVerificationDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simul
 		if !simulate && pubKey == nil {
 			return ctx, sdkerrors.Wrap(sdkerrors.ErrInvalidPubKey, "pubkey on account is not set")
 		}
+
+		sEnc := base64.StdEncoding.EncodeToString(pubKey.Bytes())
+		seq := acc.GetSequence()
+		fmt.Printf("[RELAYER SDK] SigVerify: account: %s, pubkey b64: %s, acct seq: %d, sig seq: %d\n", acc.String(), sEnc, seq, sig.Sequence)
 
 		// Check account sequence number.
 		if sig.Sequence != acc.GetSequence() {
