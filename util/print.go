@@ -10,6 +10,10 @@ import (
 )
 
 func PrintTxInfo(tx sdk.Tx, caller string) {
+	defer func() {
+		recover()
+	}()
+
 	signingTx, ok := tx.(authsigning.SigVerifiableTx)
 	if !ok {
 		fmt.Println("NOT a SigVerifiableTx")
