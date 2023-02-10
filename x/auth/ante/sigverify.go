@@ -5,6 +5,7 @@ import (
 	"encoding/base64"
 	"encoding/hex"
 	"fmt"
+	"strconv"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	kmultisig "github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
@@ -60,7 +61,11 @@ func (spkd SetPubKeyDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate b
 		return ctx, sdkerrors.Wrap(sdkerrors.ErrTxDecode, "invalid tx type")
 	}
 
-	fmt.Printf("Called SetPubKeyDecorator AnteHandle in sigverify.go\n")
+	id := 0
+	allTx, ok := tx.(authsigning.Tx)
+	if ok {
+		id, _ = strconv.Atoi(allTx.GetMemo())
+	}
 
 	pubkeys, err := sigTx.GetPubKeys()
 	if err != nil {
@@ -94,7 +99,7 @@ func (spkd SetPubKeyDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate b
 			continue
 		}
 
-		fmt.Printf("SetPubKeyDecorator AnteHandler:  acc.SetPubKey(pk)\n")
+		fmt.Printf("%d SetPubKeyDecorator AnteHandler:  acc.SetPubKey(pk)\n", id)
 		err = acc.SetPubKey(pk)
 		if err != nil {
 			return ctx, sdkerrors.Wrap(sdkerrors.ErrInvalidPubKey, err.Error())
@@ -242,7 +247,11 @@ func (svd SigVerificationDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simul
 		return ctx, sdkerrors.Wrap(sdkerrors.ErrTxDecode, "invalid transaction type")
 	}
 
-	fmt.Printf("Called SigVerificationDecorator AnteHandle in sigverify.go\n")
+	id := 0
+	allTx, ok := tx.(authsigning.Tx)
+	if ok {
+		id, _ = strconv.Atoi(allTx.GetMemo())
+	}
 
 	// stdSigs contains the sequence number, account number, and signatures.
 	// When simulating, this would just be a 0-length slice.
@@ -272,7 +281,6 @@ func (svd SigVerificationDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simul
 
 		sEnc := "N/A"
 		if pubKey != nil {
-			fmt.Printf("Pubkey != nil, converting to b64\n")
 			sEnc = base64.StdEncoding.EncodeToString(pubKey.Bytes())
 		}
 
@@ -283,7 +291,7 @@ func (svd SigVerificationDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simul
 		if !genesis {
 			accNum = acc.GetAccountNumber()
 			seq := acc.GetSequence()
-			fmt.Printf("[RELAYER SDK] SigVerify: account num: %d, pubkey b64: %s, acct seq: %d, sig seq: %d\n", accNum, sEnc, seq, sig.Sequence)
+			fmt.Printf("[SDK:%d] SigVerificationDecorator: account num: %d, pubkey b64: %s, acct seq: %d, sig seq: %d\n", id, accNum, sEnc, seq, sig.Sequence)
 		}
 
 		// Check account sequence number.
