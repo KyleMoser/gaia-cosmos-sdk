@@ -270,7 +270,10 @@ func (svd SigVerificationDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simul
 			return ctx, sdkerrors.Wrap(sdkerrors.ErrInvalidPubKey, "pubkey on account is not set")
 		}
 
-		sEnc := base64.StdEncoding.EncodeToString(pubKey.Bytes())
+		sEnc := "N/A"
+		if pubKey != nil {
+			sEnc = base64.StdEncoding.EncodeToString(pubKey.Bytes())
+		}
 		seq := acc.GetSequence()
 		fmt.Printf("[RELAYER SDK] SigVerify: account: %s, pubkey b64: %s, acct seq: %d, sig seq: %d\n", acc.String(), sEnc, seq, sig.Sequence)
 
