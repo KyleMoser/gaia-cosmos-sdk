@@ -43,7 +43,7 @@ func NewPrintDebugInfoDecorator(callerId string) PrintDebugInfoDecorator {
 
 func (pdi PrintDebugInfoDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (newCtx sdk.Context, err error) {
 	util.PrintTxInfo(tx, pdi.id)
-	return next(newCtx, tx, simulate)
+	return next(ctx, tx, simulate)
 }
 
 func (sud SetUpContextDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (newCtx sdk.Context, err error) {
