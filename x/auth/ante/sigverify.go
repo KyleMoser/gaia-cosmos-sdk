@@ -262,6 +262,20 @@ func (svd SigVerificationDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simul
 
 	signerAddrs := sigTx.GetSigners()
 
+	pubKeyList, err := sigTx.GetPubKeys()
+	if err == nil {
+		for _, pk := range pubKeyList {
+			if pk != nil {
+				b := pk.Bytes()
+				sEnc := "N/A"
+				if b != nil {
+					sEnc = base64.StdEncoding.EncodeToString(b)
+				}
+				fmt.Printf("[SDK:%d] SigVerificationDecorator:GetPubKeys(): pubkey b64: %s\n", id, sEnc)
+			}
+		}
+	}
+
 	// check that signer length and signature length are the same
 	if len(sigs) != len(signerAddrs) {
 		return ctx, sdkerrors.Wrapf(sdkerrors.ErrUnauthorized, "invalid number of signer;  expected: %d, got %d", len(signerAddrs), len(sigs))
